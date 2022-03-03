@@ -2,7 +2,7 @@ import express from 'express';
 import connectDatabase from './config/db';
 import { check, validationResult } from 'express-validator';
 import cors from 'cors';
-import bcrypt from 'bcryptjs/dist/bcrypt';
+import bcrypt from 'bcryptjs';
 import User from './models/User';
 
 const app = express();
