@@ -2,7 +2,7 @@ import express from 'express';
 import connectDatabase from './config/db';
 import { check, validationResult } from 'express-validator';
 import cors from 'cors';
-import bcrypt from 'bcryptjs';
+import bcrypt from 'bcryptjs/dist/bcrypt';
 import User from './models/User';
 
 const app = express();
@@ -40,7 +40,7 @@ app.post('/api/users',
 async (req,res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()){
-        return res.status(422).json({errors:errors.array() });
+        return res.status(422).json({errors: errors.array() });
     } else{
         const {name, email, password } = req.body;
         try {
