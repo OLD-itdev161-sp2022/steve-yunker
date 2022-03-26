@@ -54,6 +54,7 @@ const Login = ({ authenticateUser }) => {
     authenticateUser();
   }
 
+  
   return (
     <div>
       <h2>Log In</h2>
