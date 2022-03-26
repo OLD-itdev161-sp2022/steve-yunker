@@ -34,6 +34,67 @@ app.use(
   });
 
 
+  /**
+ * @route POST api/login
+ * @desc Login user
+ */
+ app.post(
+    '/api/login',
+    [
+      check('email', 'Please enter a valid email').isEmail(),
+      check('password', 'A password is required').exists()
+    ],
+    async (req, res) => {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(422).json({ errors: errors.array() });
+      } else {
+        const { email, password } = req.body;
+        try {
+          // Check if user exists
+          let user = await User.findOne({ email: email });
+          if (!user) {
+            return res
+              .status(400)
+              .json({ errors: [{ msg: 'Invalid email or password' }] });
+          }
+  
+          // Check password
+          const match = await bcrypt.compare(password, user.password);
+          if (!match) {
+            return res
+              .status(400)
+              .json({ errors: [{ msg: 'Invalid email or password' }] });
+          }
+  
+          // Generate and return a JWT token
+          returnToken(user, res);
+        } catch (error) {
+          res.status(500).send('Server error');
+        }
+      }
+    }
+  );
+
+  const returnToken = (user, res) => {
+    const payload = {
+      user: {
+        id: user.id
+      }
+    };
+  
+    jwt.sign(
+      payload,
+      config.get('jwtSecret'),
+      { expiresIn: '10hr' },
+      (err, token) => {
+        if (err) throw err;
+        res.json({ token: token });
+      }
+    );
+  };
+
+
 //api endpoints
 /**
  * @route GET /
@@ -45,21 +106,19 @@ app.get('/', (req, res) =>
     res.send('http get request sent to root api endpoint')
 );
 
-/** 
-* @route POST api/users
-* @desc Register user
-* 
-*/
-app.post(
-    '/api/users',
+/**
+ * @route POST api/users
+ * @desc Register user
+ */
+ app.post(
+    '/api/users', 
     [
-        check('name', 'Please enter your name')
+        check('name', 'Please enter a name')
             .not()
             .isEmpty(),
         check('email', 'Please enter a valid email').isEmail(),
-        check(
-            'password',
-            'Please enter a password with 6 or more characters'
+        check('password', 
+              'Please enter a password with 6 or more characters'
         ).isLength({ min: 6 })
     ],
     async (req, res) => {
@@ -70,11 +129,11 @@ app.post(
             const { name, email, password } = req.body;
             try {
                 // Check if user exists
-                let user = await User.findOne({ email: email });
+                let user = await User.findOne({ email : email });
                 if (user) {
                     return res
                         .status(400)
-                        .json({ errors: [{ msg: 'User already exists' }] });
+                        .json({ errors: [{msg: 'User already exists'}]});
                 }
 
                 // Create a new user
@@ -90,27 +149,14 @@ app.post(
 
                 // Save to the db and return
                 await user.save();
+            
+                // Generate and return a JWT token
+                returnToken(user, res);
 
-                //Generate and return a JWT token
-                const payload = {
-                    user: {
-                        id: user.id
-                    }
-                };
-
-                jwt.sign(
-                    payload,
-                    config.get('jwtSecret'),
-                    { expiresIn: '10hr' },
-                    (err, token) => {
-                        if (err) throw err;
-                        res.json({ token: token });
-                    }
-                );
+                console.log("new user added");
             } catch (error) {
                 res.status(500).send('Server error');
             }
-
         }
     }
 );
