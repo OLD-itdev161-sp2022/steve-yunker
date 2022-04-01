@@ -290,6 +290,7 @@ app.get('/', (req, res) =>
       return res.status(401).json({ msg: 'User not authorized' });
     }
 
+    
     // Update the post and return
     post.title = title || post.title;
     post.body = body || post.body;
